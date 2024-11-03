@@ -1,0 +1,62 @@
+{
+    "std": [
+        "std",
+        "reYIK",
+        "module",
+        1
+    ],
+    "prim_secded_72_64_enc": [
+        "prim_secded_72_64_enc",
+        "YxCxE",
+        "module",
+        2
+    ],
+    "prim_secded_72_64_dec": [
+        "prim_secded_72_64_dec",
+        "st8F3",
+        "module",
+        3
+    ],
+    "SECDED_encoder_0000": [
+        "SECDED_encoder_0000",
+        "AeqSj",
+        "module",
+        4
+    ],
+    "SECDED_decoder_0000": [
+        "SECDED_decoder_0000",
+        "VHbd1",
+        "module",
+        5
+    ],
+    "SRAM_6T_ARRAY": [
+        "SRAM_6T_ARRAY",
+        "Smsmc",
+        "module",
+        6
+    ],
+    "DRC_TOP_TB": [
+        "DRC_TOP_TB",
+        "k7DyM",
+        "module",
+        7
+    ],
+    "SRAM_IF": [
+        "SRAM_IF",
+        "eEC6w",
+        "module",
+        8
+    ],
+    "DRC_TOP": [
+        "DRC_TOP",
+        "YQfZh",
+        "module",
+        9
+    ],
+    "...MASTER...": [
+        "SIM",
+        "amcQw",
+        "module",
+        10
+    ]
+}

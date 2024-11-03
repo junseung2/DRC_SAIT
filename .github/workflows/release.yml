@@ -1,0 +1,26 @@
+# This file describes a workflow that runs regression tests
+# on a pull request to the main branch
+name: Release
+run-name: Build a delivery package from ${{ github.actor }}
+on:
+  release:
+    types: [released, prereleased]
+
+jobs:
+  Release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Create archive
+        run: |
+          zip -r SAIT_DRC_Delivery.zip . -x ".git*" -x "output/*" -x "obj/*" -x "bin/*" -x "*.sh" -x "filelist.f"
+      - name: Upload release asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./SAIT_DRC_Delivery.zip
+          asset_name: SAIT_DRC_Delivery.zip
+          asset_content_type: application/zip
