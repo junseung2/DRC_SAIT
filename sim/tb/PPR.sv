@@ -1,7 +1,8 @@
 module	PPR
 #(
 	parameter	int		N_CH		= 32,
-	parameter	int		ADDR_SIZE	= 24
+	parameter	int		ADDR_SIZE	= 24,
+	parameter	int		CH_WIDTH	= 5
 )
 (
 	input	wire			clk,
@@ -12,14 +13,13 @@ module	PPR
 
 	input	wire			ppr_cmd_i,
 
-	output	wire			ppr_type_o,
-	output	wire			ppr_addr_o,
-	output	wire			ppr_ch_o,
+	output	wire	[1:0]		ppr_type_o,
+	output	wire	[ADDR_SIZE-1:0]		ppr_addr_o,
+	output	wire	[CH_WIDTH-1:0]		ppr_ch_o,
 
 	output	wire			ppr_done_o
 );
 	localparam	int		PPR_SIZE	= 256;
-	localparam	int		CH_WIDTH	= $clog2(N_CH);
 	localparam	int		PPR_DEPTH	= $clog2(PPR_SIZE);
 
 	logic				ppr_valid_buffer[PPR_SIZE];

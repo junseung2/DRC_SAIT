@@ -1,6 +1,6 @@
 #!/bin/csh -f
 
-cd /home/hyungyu66/DRC/sim/output
+cd /home/dlwnstmd2021/DRC/sim/output
 
 #This ENV is used to avoid overriding current script in next vcselab run 
 setenv SNPS_VCSELAB_SCRIPT_NO_OVERRIDE  1

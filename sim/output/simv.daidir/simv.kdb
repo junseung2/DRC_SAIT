@@ -1,7 +1,7 @@
 rc file Version 1.0
 
 [Design]
-COMPILE_PATH=/home/hyungyu66/DRC/sim/output
+COMPILE_PATH=/home/dlwnstmd2021/DRC/sim/output
 VCS_HOME=/usr/synopsys/vcs/R-2020.12-SP1-1
 VERDI_HOME=/usr/synopsys/verdi/R-2020.12-SP1-1
 SystemC=FALSE
@@ -9,7 +9,7 @@ UUM=FALSE
 KDB=TRUE
 USE_NOVAS_HOME=FALSE
 COSIM=FALSE
-TOP=DRC_TOP_TB 
+TOP=SECDED_encoder SECDED_decoder DRC_TOP_TB 
 OPTION=-ssv -ssy 
 ELAB_OPTION=-ssv -ssy 
 ELAB=TRUE

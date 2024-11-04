@@ -7,6 +7,7 @@ module DRC_TOP_TB();
     localparam  ADDR_SIZE       = 24;
     localparam  IDX_SIZE        = $clog2(N_ENTRY/N_WAY);
     localparam  TAG_SIZE        = ADDR_SIZE - IDX_SIZE;
+    localparam  CH_WIDTH        = $clog2(N_CH);
     
     logic                   clk;
     logic                   rst_n;
@@ -30,7 +31,19 @@ module DRC_TOP_TB();
     logic                   ppr_valid[N_CH];
     logic       [1:0]           ppr_type[N_CH];
     logic       [ADDR_SIZE-1:0]     ppr_addr[N_CH];
+
+     // PPR Signals
+    logic                   ppr_cmd_i;
+    logic       [1:0]           ppr_type_o;
+    logic       [ADDR_SIZE-1:0]     ppr_addr_o;
+    logic       [CH_WIDTH-1:0]  ppr_ch_o;
+    logic                   ppr_done_o;
     
+    // //PPR Testbench
+    // logic       [1:0]       ppr_type_buffer[N_CH][NUM_ITER];
+    // logic       [ADDR_SIZE-1:0] ppr_addr_buffer[N_CH][NUM_ITER];
+    // logic       [CH_WIDTH-1:0] ppr_ch_buffer[N_CH][NUM_ITER];
+    // logic       [$clog2(NUM_ITER)-1:0] ppr_buffer_index[N_CH];
     // SRAM Interface
     SRAM_IF     #(N_ENTRY, N_WAY)    sram_if[N_CH]();
     
@@ -65,7 +78,9 @@ module DRC_TOP_TB();
             ecc_data[i] = '0;
             ecc_err[i] = '0;
             ecc_valid[i] = 0;
+            // ppr_buffer_index[i] = '0;
         end
+        ppr_cmd_i   = 0;
     
         // // Wait for a few cycles
         repeat (2) @(posedge clk);
@@ -76,33 +91,8 @@ module DRC_TOP_TB();
                 // Independent test scenario for each channel
                 automatic int ch_idx = ch;
                 begin
-                    // // **1. Host Write Operation Test**
-                    // addr[ch_idx] = 24'h000100 + ch_idx; // Different address for each channel
-                    // host_we[ch_idx] = 1;
-                    // host_data[ch_idx] = {272{1'b1}} ^ ch_idx; // Generate data using channel index
-                    // host_valid[ch_idx] = 1;
-                    // @(posedge clk);
-                    // host_valid[ch_idx] = 0;
-                   
-                    // // // Wait for DRC and SRAM to process data
-                    // // repeat (10) @(posedge clk);
     
-                    // // **2. Host Read Operation Test**
-                    // host_we[ch_idx] = 0;
-                    // host_valid[ch_idx] = 1;
-                    // @(posedge clk);
-                    // host_valid[ch_idx] = 0;
-    
-                    // // // Wait for DRC and SRAM to return data
-                    // // repeat (10) @(posedge clk);
-    
-                    // if (drc_hit_o[ch_idx]) begin
-                    //     $display("Channel %0d: Host read success: Address %h, Data %h", ch_idx, addr[ch_idx], drc_data_o[ch_idx]);
-                    // end else begin
-                    //     $display("Channel %0d: Host read failed: Cache miss occurred", ch_idx);
-                    // end
-    
-                    // **3. ECC Error Handling Test**
+                    // **1. ECC Error Handling Test**
                     addr[ch_idx] = 24'h000200 + ch_idx;
                     ecc_syndrome[ch_idx] = 32'h00000001; // Single-bit error syndrome
                     ecc_err[ch_idx] = 8'b01010101; // Single-bit error indicator
@@ -111,10 +101,16 @@ module DRC_TOP_TB();
                     @(posedge clk);
                     ecc_valid[ch_idx] = 0;
     
+                    // if(ppr_valid[ch_idx]==1'b1) begin
+                    //     ppr_addr_buffer[ch_idx][ppr_buffer_index[ch_idx]] = ppr_addr[ch_idx];
+                    //     ppr_type_buffer[ch_idx][ppr_buffer_index[ch_idx]] = ppr_type[ch_idx];
+                    //     ppr_ch_buffer[ch_idx][ppr_buffer_index[ch_idx]] = ch_idx;
+                    //     ppr_buffer_index[ch_idx] = ppr_buffer_index[ch_idx] + 1;
+                    // end
                     // Wait for DRC and SRAM to handle error
                     repeat (10) @(posedge clk);
     
-                    // **4. Host Read After Error Handling Test**
+                    // **2. Host Read After Error Handling Test**
                     host_we[ch_idx] = 0;
                     host_valid[ch_idx] = 1;
                     @(posedge clk);
@@ -124,14 +120,50 @@ module DRC_TOP_TB();
                     repeat (10) @(posedge clk);
     
                     if (drc_hit_o[ch_idx]) begin
-                        $display("Channel %0d: Host read after error handling success: Address %h, Data %h", ch_idx, addr[ch_idx], drc_data_o[ch_idx]);
+                        $display("Channel %0d: Host read after error handling success: Address %h", ch_idx, addr[ch_idx]);
                     end else begin
                         $display("Channel %0d: Host read after error handling failed: Cache miss occurred", ch_idx);
                     end
+
+                    repeat (10) @(posedge clk);
+                    // **3. PPR Request Generation and Testing**
+                    // Simulate PPR request due to uncorrectable error
+                
                 end
-            join_none
+            join
         end
-    
+        
+        // repeat (10) @(posedge clk);
+        ppr_cmd_i   = 1;
+        for(int index = 0 ; index<256; index++)begin
+            @(posedge clk);
+            $display("Channel %0d have ADDR: %0h, Type: %0d error",ppr_ch_o,ppr_addr_o,ppr_type_o);
+            if(ppr_done_o) break;
+        end
+
+
+        // for(int ch = 0 ; ch < N_CH ; ch++)begin
+        //     for(int index=0 ; index<ppr_buffer_index[ch];index++) begin
+        //         if((ppr_addr_o == ppr_addr_buffer[ch][index]) && (ppr_type_o == ppr_type_buffer[ch][index]) && (ppr_ch_o == ppr_ch_buffer[ch][index])) begin
+        //             ppr_hit++;
+        //             break;
+        //         end
+        //     end
+        //     ppr_write = ppr_write + ppr_buffer_index[ch]; //SRAM에서 시도한 PPR에 적으려고 한 횟수
+        // end
+        
+        // ppr_hit_rate = ppr_hit / ppr_write;
+
+        // // Wait for PPR module to process the request
+        // wait (ppr_done_o);
+
+        // // Check if outputs match the inputs
+        // if (ppr_type_o == ppr_type[ch_idx] && ppr_addr_o == ppr_addr[ch_idx] && ppr_ch_o == ch_idx) begin
+        //     $display("Channel %0d: PPR processed correctly. Type: %0d, Address: %h", ch_idx, ppr_type_o, ppr_addr_o);
+        // end 
+        // else begin
+        //     $display("Channel %0d: PPR processing error. Type: %0d, Address: %h", ch_idx, ppr_type_o, ppr_addr_o);
+        // end
         // Wait for all tests to complete
         #1000;
         $finish;
@@ -193,7 +225,8 @@ module DRC_TOP_TB();
     PPR
     #(
         .N_CH       (N_CH),
-        .ADDR_SIZE  (ADDR_SIZE)
+        .ADDR_SIZE  (ADDR_SIZE),
+        .CH_WIDTH   (CH_WIDTH)
     ) u_ppr
     (
         .clk        (clk),
@@ -203,12 +236,12 @@ module DRC_TOP_TB();
         .ppr_type_i     (ppr_type),
         .ppr_addr_i     (ppr_addr),
     
-        .ppr_cmd_i  (),
+        .ppr_cmd_i      (ppr_cmd_i),
     
-        .ppr_type_o     (),
-        .ppr_addr_o     (),
-        .ppr_ch_o   (),
+        .ppr_type_o     (ppr_type_o),
+        .ppr_addr_o     (ppr_addr_o),
+        .ppr_ch_o       (ppr_ch_o),
         
-        .ppr_done_o     ()
+        .ppr_done_o     (ppr_done_o)
     );
 endmodule

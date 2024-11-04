@@ -1,6 +1,6 @@
 psSimBaseName                      	simv
 psLogFileName                      	NULL
-pDaiDir                            	/home/hyungyu66/DRC/sim/output/simv.daidir
+pDaiDir                            	/home/dlwnstmd2021/DRC/sim/output/simv.daidir
 destPath                           	csrc/
 fSharedMaster                      	0
 fHsimPCSharedLibSpecified          	0

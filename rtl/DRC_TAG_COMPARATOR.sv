@@ -45,8 +45,8 @@ module DRC_TAG_COMPARATOR
 	
 	logic				hit;
 	logic	[WAY_WIDTH-1:0]		hit_way;
-	logic				we;
-	logic				ecc;
+	logic				we, we_n;
+	logic				ecc, ecc_n;
 	
 	logic	[271:0]			data_i;
 	
@@ -57,6 +57,8 @@ module DRC_TAG_COMPARATOR
 			delayed_data	<=272'b0;
 			delayed_syndrome<=32'b0;
 			delayed_err	<=8'b0;
+			we		<=1'b0;
+			ecc		<=1'b0;
 		end
 		else begin
 			delayed_tag	<=tag_i;
@@ -64,13 +66,15 @@ module DRC_TAG_COMPARATOR
 			delayed_data	<=data_i;
 			delayed_syndrome<=ecc_syndrome_i;
 			delayed_err	<=ecc_err_i;
-		end
+			we 		<=we_n;
+			ecc 		<=ecc_n;
+		end	
 	end
 	always_comb begin
 		hit = 1'b0;
 		hit_way = {WAY_WIDTH{1'b0}};
-		we = 1'b0;
-		ecc = 1'b0;
+		we_n = (host_valid_i & host_we_i);
+		ecc_n = ecc_valid_i;
 		if(host_valid_i | ecc_valid_i) begin
 			for(integer i=0; i<N_WAY; i=i+1) begin
 				if(rdata_valid_i[i] && (rdata_tag_i[i]==delayed_tag)) begin
@@ -78,12 +82,6 @@ module DRC_TAG_COMPARATOR
 					hit_way = i;
 				end
 			end
-		end
-		if(host_valid_i & host_we_i) begin
-			we = 1'b1;
-		end
-		if(ecc_valid_i) begin
-			ecc = 1'b1;
 		end
 	end
 
